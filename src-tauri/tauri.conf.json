@@ -5,7 +5,9 @@
   "identifier": "com.example.gitcli",
 
   "build": {
-    "frontendDist": "../ui"
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../ui/dist"
   },
 
   "app": {

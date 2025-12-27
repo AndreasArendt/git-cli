@@ -1,1 +1,41 @@
-target
+# Rust build output
+/target/
+/**/target/
+/**/*.rs.bk
+
+# Tauri generated files
+/src-tauri/gen/
+/src-tauri/target/
+/src-tauri/.tauri/
+
+# Node / Vite
+/node_modules/
+/dist/
+/ui/dist/
+/ui/.vite/
+/.vite/
+*.tsbuildinfo
+
+# Logs and debug
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Caches and coverage
+.cache/
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editor and OS cruft
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
