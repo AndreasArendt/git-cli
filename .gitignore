@@ -9,7 +9,7 @@
 /src-tauri/.tauri/
 
 # Node / Vite
-/node_modules/
+node_modules/
 /dist/
 /ui/dist/
 /ui/.vite/
