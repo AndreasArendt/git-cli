@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug git-cli",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/target/debug/git-cli",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"],
+      "env": {
+        "RUST_BACKTRACE": "1"
+      }
+    }
+  ]
+}

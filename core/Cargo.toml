@@ -1,0 +1,11 @@
+[package]
+name = "git-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core utilities for the git-cli application"
+
+[dependencies]
+anyhow = "1"
+portable-pty = "0.8"
+git2 = "0.18"
+serde = { version = "1", features = ["derive"] }
