@@ -135,8 +135,15 @@ async function handleCwdChange(cwd) {
     const result = await invoke("update_git_context", { path: cwd });
 
     if(result) {
-      const repo = createRepo(result.name, result.root);
+      const branches = await invoke("git_branches", { path: result.root });
+      const active_branch = await invoke("git_current_branch", { path: result.root });
+
+      const currentBranch = Array.isArray(active_branch) ? active_branch[0] || "" : active_branch || "";
+      const repo = createRepo(result.name, result.root, branches || [], currentBranch);
       setActiveRepo(repo);
+    }
+    else {
+      setActiveRepo(null);
     }
     
     if (result && result.root !== lastGitRoot) {

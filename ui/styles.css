@@ -146,6 +146,34 @@ body {
   color: #0b3d91;
 }
 
+#branches {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 4px;
+}
+
+.branch-item {
+  padding: 3px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #2f2f2f;
+}
+
+.branch-item:hover {
+  background: #e8e8e8;
+  cursor: pointer;
+}
+
+#active_branch {
+  padding: 3px 8px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
 #content {
   flex: 1;
   display: flex;
@@ -270,13 +298,34 @@ body {
 }
 
 #panel-tabs {
-  height: 8px;
+  height: 32px;
   display: flex;
   align-items: flex-end;
   gap: 8px;
   padding-left: 12px;
   background: #f5f5f5;
   border-bottom: 1px solid #dcdcdc;
+}
+
+.panel-tab {
+  padding: 6px 10px;
+  border-radius: 6px 6px 0 0;
+  font-size: 12px;
+  color: #5b5b5b;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  letter-spacing: 0.2px;
+}
+
+.panel-tab.active {
+  background: #ffffff;
+  color: #1f1f1f;
+  border-color: #dcdcdc;
+  box-shadow: inset 0 -1px 0 #ffffff;
 }
 
 #terminal-pane {

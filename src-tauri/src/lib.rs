@@ -1,7 +1,7 @@
 mod commands;
 mod state;
 
-pub use commands::{spawn_terminal, update_git_context, write_terminal};
+pub use commands::{spawn_terminal, update_git_context, write_terminal, git_branches, git_current_branch};
 pub use state::AppState;
 use tauri::Manager;
 
@@ -12,7 +12,9 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       spawn_terminal,
       write_terminal,
-      update_git_context
+      update_git_context,
+      git_branches,
+      git_current_branch
     ])
     .setup(|app| {
       if cfg!(debug_assertions) {

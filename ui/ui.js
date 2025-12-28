@@ -24,7 +24,7 @@ export function initUI() {
   });
 
   addButton.addEventListener("click", () => {
-    const repo = createRepo("", "");
+    const repo = createRepo("", "", [], "");
     addRepo(repo);
 
     const newTab = buildTab(repo);
@@ -44,7 +44,7 @@ function hydrateInitialTab(tabs) {
   if (!initialTab) return;
 
   const initialName = initialTab.textContent.trim() || "main.js";
-  const repo = createRepo(initialName, "");
+  const repo = createRepo(initialName, "", [], "");
   addRepo(repo);
   const hydratedTab = buildTab(repo, initialTab);
 
