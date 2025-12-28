@@ -42,7 +42,34 @@ impl PtyManager {
     })?;
 
     #[cfg(target_os = "windows")]
-    let mut cmd = CommandBuilder::new("powershell.exe");
+    let mut spawn_err: Option<String> = None;
+
+    #[cfg(target_os = "windows")]
+    let _child = {
+      let attempts: [(&str, &[&str]); 3] = [
+        ("pwsh.exe", &["-NoLogo", "-NoProfile", "-NoExit"]),
+        ("powershell.exe", &["-NoLogo", "-NoProfile", "-NoExit"]),
+        ("cmd.exe", &["/d", "/k"]),
+      ];
+
+      let mut child = None;
+      for (prog, args) in attempts {
+        let mut c = CommandBuilder::new(prog);
+        c.args(args);
+        c.env("TERM", "xterm-256color");
+        match pair.slave.spawn_command(c) {
+          Ok(ch) => {
+            child = Some(ch);
+            break;
+          }
+          Err(err) => {
+            spawn_err = Some(format!("{prog} failed: {err}"));
+          }
+        }
+      }
+
+      child.ok_or_else(|| anyhow!(spawn_err.unwrap_or_else(|| "no shell attempts were made".into())))?
+    };
 
     #[cfg(not(target_os = "windows"))]
     let shell_path = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
@@ -58,11 +85,12 @@ impl PtyManager {
         c.arg("-i");
       }
 
+      c.env("TERM", "xterm-256color");
+
       c
     };
 
-    cmd.env("TERM", "xterm-256color");
-
+    #[cfg(not(target_os = "windows"))]
     let _child = pair.slave.spawn_command(cmd)?;
     let mut reader = pair.master.try_clone_reader()?;
     let writer = pair.master.take_writer()?;

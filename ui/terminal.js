@@ -11,6 +11,7 @@ let cwdHookInstalled = false;
 
 const cwdOscPattern = /\u001b]777;cwd=([^\u0007]+)\u0007/g;
 const osc7Pattern = /\u001b]7;file:\/\/[^\u/]*([^\u0007\x1b]+)[\u0007\x1b\\]/g;
+const isWindows = navigator.userAgent.includes("Windows");
 
 export async function initTerminal() {
   const container = document.getElementById("terminal");
@@ -31,10 +32,17 @@ export async function initTerminal() {
     term.focus();
   });
 
-  await invoke("spawn_terminal");
+  try {
+    await invoke("spawn_terminal");
+  } catch (err) {
+    console.error("spawn_terminal failed", err);
+    return;
+  }
 
   term.onData(data => {
-    invoke("write_terminal", { data });
+    invoke("write_terminal", { data }).catch(err => {
+      console.error("write_terminal failed", err);
+    });
   });
 
   await listen("pty-data", event => {
@@ -60,9 +68,15 @@ export async function initTerminal() {
   });
 
   // Install prompt hook once per session to emit cwd without showing the command.
-  installCwdHook();
+  // Skip hook injection on Windows to avoid breaking PowerShell/cmd prompts.
+  if (!isWindows) {
+    installCwdHook();
+  }
+
   requestAnimationFrame(() => {
-    emitCwdOnce();
+    if (!isWindows) {
+      emitCwdOnce();
+    }
   });
 
   window.addEventListener("resize", () => {
@@ -71,26 +85,28 @@ export async function initTerminal() {
 }
 
 function installCwdHook() {
+  if (isWindows) return;
   if (cwdHookInstalled) return;
   cwdHookInstalled = true;
-  const hook = [
-    '__codex_cwd(){ printf "\\033]777;cwd=%s\\007" "$PWD"; printf "\\033]7;file://%s\\007" "$PWD"; }',
-    'if [ -n "$ZSH_VERSION" ]; then',
-    '  autoload -Uz add-zsh-hook 2>/dev/null || true',
-    '  typeset -ga precmd_functions',
-    '  typeset -ga chpwd_functions',
-    '  precmd_functions=(${precmd_functions:#__codex_cwd} __codex_cwd)',
-    '  chpwd_functions=(${chpwd_functions:#__codex_cwd} __codex_cwd)',
-    'elif [ -n "$BASH_VERSION" ]; then',
-    '  case ";$PROMPT_COMMAND;" in *";__codex_cwd;"*) ;; *) PROMPT_COMMAND="__codex_cwd${PROMPT_COMMAND:+;$PROMPT_COMMAND}";; esac',
-    'else',
-    '  PROMPT_COMMAND="__codex_cwd${PROMPT_COMMAND:+;$PROMPT_COMMAND}"',
-    'fi',
-    '__codex_cwd'
-  ].join("\n");
 
-  // Ensure commands run immediately by sending with CRLF.
-  invoke("write_terminal", { data: `${hook}\r\n` });
+  const posixHook = `
+__codex_cwd() {
+  printf "\\033]777;cwd=%s\\007" "$PWD"
+  printf "\\033]7;file://%s\\007" "$PWD"
+}
+
+if [ -n "$ZSH_VERSION" ]; then
+  autoload -Uz add-zsh-hook
+  add-zsh-hook precmd __codex_cwd
+else
+  PROMPT_COMMAND="__codex_cwd\${PROMPT_COMMAND:+;\$PROMPT_COMMAND}"
+fi
+
+__codex_cwd
+`.trim();
+
+  // Send with CRLF so it executes immediately
+  invoke("write_terminal", { data: posixHook + "\r\n" });
 }
 
 function emitCwdOnce() {
