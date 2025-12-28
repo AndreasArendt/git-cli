@@ -101,13 +101,13 @@ function detectCwdOsc(data) {
   cwdOscPattern.lastIndex = 0;
   let match;
   while ((match = cwdOscPattern.exec(data)) !== null) {
-    console.debug("OSC 777 cwd detected:", match[1]);
+    // console.debug("OSC 777 cwd detected:", match[1]);
     handleCwdChange(match[1]);
   }
 
   osc7Pattern.lastIndex = 0;
   while ((match = osc7Pattern.exec(data)) !== null) {
-    console.debug("OSC 7 cwd detected:", match[1]);
+    // console.debug("OSC 7 cwd detected:", match[1]);
     handleCwdChange(match[1]);
   }
 }
