@@ -3,6 +3,8 @@ import { FitAddon } from "xterm-addon-fit";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import "xterm/css/xterm.css";
+import { dom } from "./dom";
+import {createRepo, setActiveRepo} from "./repo_states";
 
 let term;
 let fitAddon;
@@ -132,8 +134,11 @@ async function handleCwdChange(cwd) {
   try {
     const result = await invoke("update_git_context", { path: cwd });
 
-    console.log("Git context:", result);
-
+    if(result) {
+      const repo = createRepo(result.name, result.root);
+      setActiveRepo(repo);
+    }
+    
     if (result && result.root !== lastGitRoot) {
       lastGitRoot = result.root;
       updateEditorTabTitle(result.name);
@@ -147,12 +152,15 @@ async function handleCwdChange(cwd) {
 }
 
 function updateEditorTabTitle(repoName) {
-  const tab = document.querySelector("#editor-tabs .tab.active");
+  const tab = document.querySelector("#editor-tabs .editor-tab.active");
   if (!tab) return;
 
-  if (repoName) {
-    tab.textContent = repoName;
-  } else {
-    tab.textContent = "main.js";
+  const label = tab.querySelector(".editor-tab-label");
+  const target = label || tab;
+  const name = repoName || "";
+
+  target.textContent = name;
+  if (tab.__repo) {
+    tab.__repo.name = name;
   }
 }

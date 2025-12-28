@@ -11,16 +11,14 @@
 
 <body>
   <div id="app">
-    <div id="titlebar">git-cli</div>
+    <div id="titlebar">
+      <div id="titlebar-title">git-cli</div>
+      <div id="titlebar-actions">
+
+      </div>
+    </div>
     <div id="layout">
       <div id="activity-bar">
-
-
-        <div class="icon">
-          <span class="material-symbols-outlined">
-            add
-          </span>
-        </div>
 
 
         <div class="icon">
@@ -45,7 +43,14 @@
       <div id="content">
         <div id="editor">
           <div id="editor-tabs">
-            
+            <div id="active_repo" class="editor-tab active">
+              <span id="active_repo_close" class="material-symbols-outlined">
+                close_small
+              </span>
+            </div>
+            <button id="new-repo-tab" class="titlebar-btn" aria-label="New repo tab">
+              <span id="new-repo-add" class="material-symbols-outlined">add</span>
+            </button>
           </div>
           <div id="editor-surface">
             <p class="placeholder">Editor area placeholder</p>
@@ -53,6 +58,7 @@
         </div>
         <div id="panel">
           <div id="panel-tabs">
+            <div class="panel-tab active">Terminal</div>
           </div>
           <div id="terminal-pane">
             <div id="terminal"></div>
