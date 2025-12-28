@@ -4,13 +4,61 @@
 <head>
   <meta charset="utf-8" />
   <title>My Tool</title>
-  <link rel="stylesheet" href="styles.css" />  
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
 </head>
 
 <body>
-  <div id="app">    
-    <div id="terminal-pane">
-      <div id="terminal"></div>
+  <div id="app">
+    <div id="titlebar">git-cli</div>
+    <div id="layout">
+      <div id="activity-bar">
+
+
+        <div class="icon">
+          <span class="material-symbols-outlined">
+            add
+          </span>
+        </div>
+
+
+        <div class="icon">
+          <span class="material-symbols-outlined">
+            graph_1
+          </span>
+        </div>
+
+
+
+      </div>
+      <div id="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Branches</div>
+          <div class="sidebar-item active">workspace</div>
+          <div class="sidebar-item">src-tauri</div>
+          <div class="sidebar-item">ui</div>
+          <div class="sidebar-title">Tags</div>
+          <div class="sidebar-title">Submodules</div>
+        </div>
+      </div>
+      <div id="content">
+        <div id="editor">
+          <div id="editor-tabs">
+            
+          </div>
+          <div id="editor-surface">
+            <p class="placeholder">Editor area placeholder</p>
+          </div>
+        </div>
+        <div id="panel">
+          <div id="panel-tabs">
+          </div>
+          <div id="terminal-pane">
+            <div id="terminal"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -1,7 +1,7 @@
 mod commands;
 mod state;
 
-pub use commands::{spawn_terminal, write_terminal};
+pub use commands::{spawn_terminal, update_git_context, write_terminal};
 pub use state::AppState;
 use tauri::Manager;
 
@@ -9,7 +9,11 @@ use tauri::Manager;
 pub fn run() {
   tauri::Builder::default()
     .manage(AppState::default())
-    .invoke_handler(tauri::generate_handler![spawn_terminal, write_terminal])
+    .invoke_handler(tauri::generate_handler![
+      spawn_terminal,
+      write_terminal,
+      update_git_context
+    ])
     .setup(|app| {
       if cfg!(debug_assertions) {
         let window = app.handle().get_webview_window("main").unwrap();

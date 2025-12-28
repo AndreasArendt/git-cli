@@ -45,8 +45,21 @@ impl PtyManager {
     let mut cmd = CommandBuilder::new("powershell.exe");
 
     #[cfg(not(target_os = "windows"))]
-    let mut cmd =
-      CommandBuilder::new(std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into()));
+    let shell_path = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
+
+    #[cfg(not(target_os = "windows"))]
+    let mut cmd = {
+      let mut c = CommandBuilder::new(&shell_path);
+
+      // Force an interactive shell so precmd / PROMPT_COMMAND hooks run and cwd OSC markers emit.
+      if shell_path.contains("zsh") {
+        c.arg("-i");
+      } else if shell_path.contains("bash") {
+        c.arg("-i");
+      }
+
+      c
+    };
 
     cmd.env("TERM", "xterm-256color");
 
