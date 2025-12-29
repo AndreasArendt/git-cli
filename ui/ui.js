@@ -72,6 +72,7 @@ function buildTab(repo, existing) {
   closeButton.setAttribute("aria-label", `Close ${repo.name}`);
 
   const icon = document.createElement("span");
+  icon.id = "close-icon";
   icon.className = "material-symbols-outlined";
   icon.textContent = "close";
   closeButton.appendChild(icon);

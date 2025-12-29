@@ -206,9 +206,9 @@ body {
   border-radius: 4px 4px 0 0;
   font-size: 12px;
   color: #424242;
-  background: transparent;
-  border: 1px solid transparent;
-  border-bottom: none;
+  background: #f7f7f7;
+  border: 1px solid #dcdcdc;
+  border-bottom: 1px solid #dcdcdc;
   min-width: 120px;
   text-align: left;
   height: 28px;
@@ -228,6 +228,7 @@ body {
   color: #1e1e1e;
   border-color: #dcdcdc;
   border-bottom: 1px solid #ffffff;
+  box-shadow: 0 -1px 0 #ffffff;
 }
 
 .editor-tab-label {
@@ -263,6 +264,8 @@ body {
 
 .tab-close:hover {
   color: #2b2b2b;
+  background: #e0e0e0;
+  border-radius: 4px;
 }
 
 .tab-close .material-symbols-outlined {
@@ -299,13 +302,14 @@ body {
 }
 
 #panel-tabs {
-  height: px;
+  height: 18px;
   display: flex;
   align-items: flex-end;
   gap: 8px;
   padding-left: 12px;
   background: #f5f5f5;
   border-bottom: 1px solid #dcdcdc;
+  font-size: 12px;
 }
 
 #terminal-pane {
