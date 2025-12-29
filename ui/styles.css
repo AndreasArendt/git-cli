@@ -194,41 +194,49 @@ body {
   height: 32px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 8px;
-  background: #f8f8f8;
-  border-bottom: 1px solid #dcdcdc;
+  gap: 0;
+  padding: 0 6px;
+  background: #f8f9fb;
+  border-bottom: none;
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+#new-repo-tab {
+  margin-left: 6px;
 }
 
 .editor-tab {
-  padding: 6px 10px;
+  padding: 6px 12px;
   padding-right: 30px;
-  border-radius: 4px 4px 0 0;
+  border-radius: 0;
   font-size: 12px;
-  color: #424242;
-  background: #f7f7f7;
-  border: 1px solid #dcdcdc;
-  border-bottom: 1px solid #dcdcdc;
-  min-width: 120px;
+  font-weight: 500;
+  color: #3a3a3a;
+  background: #f7f8fb;
+  border: 1px solid #dfe3ec;
+  border-bottom: 1px solid #dfe3ec;
+  min-width: 110px;
   text-align: left;
-  height: 28px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   position: relative;
-  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .editor-tab:hover {
-  background: #e8e8e8;
+  background: #eef2fb;
+  border-color: #cfd6e6;
   cursor: pointer;
 }
 
 .editor-tab.active {
   background: #ffffff;
-  color: #1e1e1e;
-  border-color: #dcdcdc;
-  border-bottom: 1px solid #ffffff;
-  box-shadow: 0 -1px 0 #ffffff;
+  color: #1f1f1f;
+  border-color: #cbd3e2;
+  border-bottom-color: #ffffff;
+  box-shadow: none;
 }
 
 .editor-tab-label {
