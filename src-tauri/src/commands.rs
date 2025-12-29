@@ -56,7 +56,7 @@ pub fn git_branches(path: String) -> Result<Vec<String>, String> {
     .arg("-C")
     .arg(&path)
     .arg("branch")
-    .arg("--list")
+    .arg("-a")
     .output()
     .map_err(|e| e.to_string())?;
 
