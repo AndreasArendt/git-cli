@@ -28,16 +28,24 @@ export async function initTerminal() {
   fitAddon = new FitAddon();
   term.loadAddon(fitAddon);
 
-  requestAnimationFrame(() => {
-    term.open(container);
-    fitAddon.fit();
-    term.focus();
+  term.open(container);
+  fitAddon.fit();
+  term.focus();
+
+  const unlisten = await listen("pty-data", event => {
+    const data = event.payload.data;
+    detectCwdOsc(data);
+    term.write(data);
+  }).catch(err => {
+    console.error("Failed to attach PTY listener", err);
+    return null;
   });
 
   try {
     await invoke("spawn_terminal");
   } catch (err) {
     console.error("spawn_terminal failed", err);
+    if (typeof unlisten === "function") unlisten();
     return;
   }
 
@@ -45,12 +53,6 @@ export async function initTerminal() {
     invoke("write_terminal", { data }).catch(err => {
       console.error("write_terminal failed", err);
     });
-  });
-
-  await listen("pty-data", event => {
-    const data = event.payload.data;
-    detectCwdOsc(data);
-    term.write(data);
   });
 
   term.parser.registerOscHandler(777, data => {
@@ -71,9 +73,10 @@ export async function initTerminal() {
 
   // Install prompt hook once per session to emit cwd without showing the command.
   if (isWindows) {
-    // Windows prompt hook is set during PTY spawn to avoid noisy output here.
+    emitCwdOnce();
   } else {
     installCwdHook();
+    emitCwdOnce();
   }
 
   window.addEventListener("resize", () => {
@@ -150,8 +153,10 @@ function detectCwdOsc(data) {
 }
 
 async function handleCwdChange(cwd) {
+  const normalizedCwd = normalizeCwd(cwd);
+
   try {
-    const result = await invoke("update_git_context", { path: cwd });
+    const result = await invoke("update_git_context", { path: normalizedCwd });
 
     if(result) {
       const branches = await invoke("git_branches", { path: result.root });
@@ -203,4 +208,37 @@ function sendPosixSilently(script) {
   invoke("write_terminal", { data: command }).catch(err => {
     console.error("Failed to install POSIX cwd hook", err);
   });
+}
+
+function emitCwdOnce() {
+  if (isWindows) {
+    const psEmit = `
+$esc = [char]27
+$bel = [char]7
+$p = (Get-Location).Path
+$uriPath = $p -replace '\\\\','/'
+[Console]::Write("$esc]777;cwd=$uriPath$bel")
+[Console]::Write("$esc]7;file:///$uriPath$bel")
+`.trim();
+
+    invoke("write_terminal", { data: psEmit.replace(/\n/g, "\r\n") + "\r\n" }).catch(err => {
+      console.error("Failed to emit Windows cwd", err);
+    });
+    return;
+  }
+
+  const posixEmit = 'printf "\\033]777;cwd=%s\\007" "$PWD"; printf "\\033]7;file://%s\\007" "$PWD"';
+  invoke("write_terminal", { data: posixEmit + "\r\n" }).catch(err => {
+    console.error("Failed to emit POSIX cwd", err);
+  });
+}
+
+function normalizeCwd(cwd) {
+  if (!cwd) return cwd;
+  if (isWindows) {
+    // Handle file URI style paths like /C:/path -> C:/path for git -C on Windows.
+    const drive = cwd.match(/^\/([A-Za-z]:\/.*)$/);
+    if (drive) return drive[1];
+  }
+  return cwd;
 }
