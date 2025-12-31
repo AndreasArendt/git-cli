@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import { dom } from "./dom.js";
 import { addRepo, createRepo, removeRepo, setActiveRepo } from "./repo_states.js";
 
@@ -35,7 +34,6 @@ export function initUI() {
     }
 
     activateTab(newTab);
-    resetConsoleToHome();
   });
 }
 
@@ -120,8 +118,4 @@ function findNeighborTab(tab) {
     node = node.previousElementSibling;
   }
   return node || null;
-}
-
-function resetConsoleToHome() {
-  invoke("write_terminal", { data: "cd ~\r\n" }).catch(() => {});
 }

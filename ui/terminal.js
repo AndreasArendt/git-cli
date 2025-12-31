@@ -70,16 +70,11 @@ export async function initTerminal() {
   });
 
   // Install prompt hook once per session to emit cwd without showing the command.
-  // Skip hook injection on Windows to avoid breaking PowerShell/cmd prompts.
-  if (!isWindows) {
+  if (isWindows) {
+    // Windows prompt hook is set during PTY spawn to avoid noisy output here.
+  } else {
     installCwdHook();
   }
-
-  requestAnimationFrame(() => {
-    if (!isWindows) {
-      emitCwdOnce();
-    }
-  });
 
   window.addEventListener("resize", () => {
     fitAddon.fit();
@@ -107,12 +102,36 @@ fi
 __codex_cwd
 `.trim();
 
-  // Send with CRLF so it executes immediately
-  invoke("write_terminal", { data: posixHook + "\r\n" });
+  sendPosixSilently(posixHook);
 }
 
-function emitCwdOnce() {
-  invoke("write_terminal", { data: 'printf "\\033]777;cwd=%s\\007" "$PWD"\r\n' });
+function installWindowsCwdHook() {
+  if (!isWindows) return;
+  if (cwdHookInstalled) return;
+  cwdHookInstalled = true;
+
+  // PowerShell prompt hook to emit OSC 777/7 before rendering the prompt.
+  const psHook = `
+$esc = [char]27
+$bel = [char]7
+function __codex_emit_cwd {
+  $p = (Get-Location).Path
+  $uriPath = $p -replace '\\\\','/'
+  [Console]::Write("$esc]777;cwd=$uriPath$bel")
+  [Console]::Write("$esc]7;file:///$uriPath$bel")
+}
+if (-not (Test-Path function:__codex_original_prompt)) {
+  if (Test-Path function:prompt) { $function:__codex_original_prompt = $function:prompt }
+}
+function prompt {
+  __codex_emit_cwd
+  if (Test-Path function:__codex_original_prompt) { & $__codex_original_prompt }
+  else { "PS " + (Get-Location) + "> " }
+}
+__codex_emit_cwd
+`.trim();
+
+  invoke("write_terminal", { data: psHook + "\r\n" });
 }
 
 function detectCwdOsc(data) {
@@ -170,4 +189,18 @@ function updateEditorTabTitle(repoName) {
   if (tab.__repo) {
     tab.__repo.name = name;
   }
+}
+
+function sendPosixSilently(script) {
+  const guard = 'command -v stty >/dev/null 2>&1';
+  const payload = [
+    `${guard} && stty -echo`,
+    script,
+    `${guard} && stty echo`,
+  ].join("\n");
+
+  const command = payload.replace(/\n/g, "\r\n") + "\r\n";
+  invoke("write_terminal", { data: command }).catch(err => {
+    console.error("Failed to install POSIX cwd hook", err);
+  });
 }

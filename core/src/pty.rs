@@ -1,10 +1,33 @@
 use anyhow::{anyhow, Result};
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+#[cfg(target_os = "windows")]
+use portable_pty::MasterPty;
 use std::{
   collections::HashMap,
   io::{Read, Write},
   thread,
 };
+
+#[cfg(target_os = "windows")]
+const POWERSHELL_PROMPT_HOOK: &str = r#"
+$esc = [char]27
+$bel = [char]7
+function __codex_emit_cwd {
+  $p = (Get-Location).Path
+  $uriPath = $p -replace '\\','/'
+  [Console]::Write("$esc]777;cwd=$uriPath$bel")
+  [Console]::Write("$esc]7;file:///$uriPath$bel")
+}
+if (-not (Test-Path function:__codex_original_prompt)) {
+  if (Test-Path function:prompt) { $function:__codex_original_prompt = $function:prompt }
+}
+function prompt {
+  __codex_emit_cwd
+  if (Test-Path function:__codex_original_prompt) { & $__codex_original_prompt }
+  else { "PS " + (Get-Location) + "> " }
+}
+__codex_emit_cwd
+"#;
 
 pub struct PtyManager {
   sessions: HashMap<String, PtySession>,
@@ -12,6 +35,8 @@ pub struct PtyManager {
 
 struct PtySession {
   writer: Box<dyn Write + Send>,
+  #[cfg(target_os = "windows")]
+  _master: Box<dyn MasterPty + Send>,
 }
 
 impl PtyManager {
@@ -46,16 +71,45 @@ impl PtyManager {
 
     #[cfg(target_os = "windows")]
     let _child = {
-      let attempts: [(&str, &[&str]); 3] = [
-        ("pwsh.exe", &["-NoLogo", "-NoProfile", "-NoExit"]),
-        ("powershell.exe", &["-NoLogo", "-NoProfile", "-NoExit"]),
-        ("cmd.exe", &["/d", "/k"]),
+      let hook_command = {
+        let compact = POWERSHELL_PROMPT_HOOK
+          .lines()
+          .map(str::trim)
+          .filter(|line| !line.is_empty())
+          .collect::<Vec<_>>()
+          .join("; ");
+
+        format!("& {{ {compact} }}")
+      };
+
+      let attempts: [(&str, Vec<String>); 3] = [
+        (
+          "pwsh.exe",
+          vec![
+            "-NoLogo".into(),
+            "-NoProfile".into(),
+            "-NoExit".into(),
+            "-Command".into(),
+            hook_command.clone(),
+          ],
+        ),
+        (
+          "powershell.exe",
+          vec![
+            "-NoLogo".into(),
+            "-NoProfile".into(),
+            "-NoExit".into(),
+            "-Command".into(),
+            hook_command.clone(),
+          ],
+        ),
+        ("cmd.exe", vec!["/d".into(), "/k".into()]),
       ];
 
       let mut child = None;
       for (prog, args) in attempts {
         let mut c = CommandBuilder::new(prog);
-        c.args(args);
+        c.args(args.iter().map(|s| s.as_str()));
         c.env("TERM", "xterm-256color");
         match pair.slave.spawn_command(c) {
           Ok(ch) => {
@@ -95,6 +149,9 @@ impl PtyManager {
     let mut reader = pair.master.try_clone_reader()?;
     let writer = pair.master.take_writer()?;
 
+    #[cfg(target_os = "windows")]
+    let master_guard = pair.master;
+
     let session_id = id.clone();
     thread::spawn(move || {
       let mut buf = [0u8; 8192];
@@ -110,7 +167,14 @@ impl PtyManager {
       }
     });
 
-    self.sessions.insert(id, PtySession { writer });
+    self.sessions.insert(
+      id,
+      PtySession {
+        writer,
+        #[cfg(target_os = "windows")]
+        _master: master_guard,
+      },
+    );
     Ok(())
   }
 
